@@ -21,6 +21,8 @@ import (
 type Config struct {
 	// Peer is the peer name.
 	Peer string
+	// Namespace is the namespace the components deployed.
+	Namespace string
 
 	// FabricCertificate is the fabric certificate.
 	FabricCertificate *bootstrap.Certificate
@@ -49,4 +51,6 @@ const (
 	DataplaneTypeEnvoy = "envoy"
 	// DataplaneTypeGo represents a go-type dataplane.
 	DataplaneTypeGo = "go"
+	// SystemNamespace represents the default namespace the system use.
+	SystemNamespace = "clusterlink-system"
 )

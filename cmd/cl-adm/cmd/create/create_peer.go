@@ -31,6 +31,8 @@ import (
 type PeerOptions struct {
 	// Name of the peer to create.
 	Name string
+	// Namespace where the ClusterLink components are deployed.
+	Namespace string
 	// Dataplanes is the number of dataplanes to create.
 	Dataplanes uint16
 	// DataplaneType is the type of dataplane to create (envoy or go-based)
@@ -44,6 +46,7 @@ type PeerOptions struct {
 // AddFlags adds flags to fs and binds them to options.
 func (o *PeerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.Name, "name", "", "Peer name.")
+	fs.StringVar(&o.Namespace, "namespace", platform.SystemNamespace, "Namespace where the ClusterLink components are deployed.")
 	fs.Uint16Var(&o.Dataplanes, "dataplanes", 1, "Number of dataplanes.")
 	fs.StringVar(&o.DataplaneType, "dataplane-type", platform.DataplaneTypeEnvoy,
 		"Type of dataplane, Supported values: \"envoy\" (default), \"go\"")
@@ -196,7 +199,9 @@ func (o *PeerOptions) Run() error {
 		DataplaneType:           o.DataplaneType,
 		LogLevel:                o.LogLevel,
 		ContainerRegistry:       o.ContainerRegistry,
+                Namespace:               o.Namespace,
 	})
+
 	if err != nil {
 		return err
 	}

@@ -32,6 +32,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cl-fabric
+  namespace: {{.namespace}}
 data:
   ca: {{.fabricCA}}
 ---
@@ -39,6 +40,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cl-peer
+  namespace: {{.namespace}}
 data:
   ca: {{.peerCA}}
 ---
@@ -46,6 +48,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cl-controlplane
+  namespace: {{.namespace}}
 data:
   cert: {{.controlplaneCert}}
   key: {{.controlplaneKey}}
@@ -54,6 +57,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cl-dataplane
+  namespace: {{.namespace}}
 data:
   cert: {{.dataplaneCert}}
   key: {{.dataplaneKey}}
@@ -62,6 +66,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: gwctl
+  namespace: {{.namespace}}
 data:
   cert: {{.gwctlCert}}
   key: {{.gwctlKey}}
@@ -70,6 +75,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: cl-controlplane
+  namespace: {{.namespace}}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -81,6 +87,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cl-controlplane
+  namespace: {{.namespace}}
   labels:
     app: cl-controlplane
 spec:
@@ -135,6 +142,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cl-dataplane
+  namespace: {{.namespace}}
   labels:
     app: cl-dataplane
 spec:
@@ -181,6 +189,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: gwctl
+  namespace: {{.namespace}}
   labels:
     app: gwctl
 spec:
@@ -225,6 +234,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cl-controlplane
+  namespace: {{.namespace}}
 spec:
   selector:
     app: cl-controlplane
@@ -236,6 +246,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cl-dataplane
+  namespace: {{.namespace}}
 spec:
   selector:
     app: cl-dataplane
@@ -266,7 +277,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: default`
+  namespace: {{.namespace}}`
 )
 
 // K8SConfig returns a kubernetes deployment file.
@@ -278,12 +289,15 @@ func K8SConfig(config *Config) ([]byte, error) {
 
 	args := map[string]interface{}{
 		"peer":              config.Peer,
+		"namespace":         config.Namespace,
 		"dataplanes":        config.Dataplanes,
 		"dataplaneType":     config.DataplaneType,
 		"logLevel":          config.LogLevel,
 		"containerRegistry": containerRegistry,
 
 		"dataplaneTypeEnvoy": DataplaneTypeEnvoy,
+
+		"persistencyDirectoryMountPath": filepath.Dir(cpapp.StoreFile),
 
 		"fabricCA":         base64.StdEncoding.EncodeToString(config.FabricCertificate.RawCert()),
 		"peerCA":           base64.StdEncoding.EncodeToString(config.PeerCertificate.RawCert()),
@@ -293,8 +307,6 @@ func K8SConfig(config *Config) ([]byte, error) {
 		"dataplaneKey":     base64.StdEncoding.EncodeToString(config.DataplaneCertificate.RawKey()),
 		"gwctlCert":        base64.StdEncoding.EncodeToString(config.GWCTLCertificate.RawCert()),
 		"gwctlKey":         base64.StdEncoding.EncodeToString(config.GWCTLCertificate.RawKey()),
-
-		"persistencyDirectoryMountPath": filepath.Dir(cpapp.StoreFile),
 
 		"controlplaneCAMountPath":   cpapp.CAFile,
 		"controlplaneCertMountPath": cpapp.CertificateFile,
